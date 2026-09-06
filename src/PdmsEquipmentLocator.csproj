@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>PdmsEquipmentLocator</RootNamespace>
+    <InvariantGlobalization>false</InvariantGlobalization>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ClosedXML" Version="0.105.1" />
+    <PackageReference Include="netDxf" Version="2023.11.10" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="PdmsEquipmentLocator.Tests\**" />
+    <EmbeddedResource Remove="PdmsEquipmentLocator.Tests\**" />
+    <None Remove="PdmsEquipmentLocator.Tests\**" />
+  </ItemGroup>
+
+</Project>

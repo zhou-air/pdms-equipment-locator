@@ -1,0 +1,67 @@
+════════════════════════════════════════════════════════════
+   PDMS 设备定位工具 — Phase 2A（Excel + DXF + 设备真实俯视轮廓）
+════════════════════════════════════════════════════════════
+
+【这是什么】
+解析 AVEVA PDMS / Plant Design 导出的 Data Listing TXT 文件，
+自动识别全部 EQUIPMENT（设备）位号与坐标，一次运行同时生成：
+  1. 设备明细 JSON（调试/追溯）
+  2. 设备坐标 Excel（三 Sheet：设备坐标 / 解析异常 / 统计）
+  3. CAD 设备定位图 DXF（十字定位点 + 定位圆 + 设备位号 + 设备真实俯视轮廓）
+  4. Primitive 报告 Excel（Primitive 统计 / 未支持明细 / ORI 解析异常）
+
+【使用方法（二选一）】
+方式1（推荐，最简单）：
+  把 Data Listing TXT 文件用鼠标直接拖到 PdmsEquipmentLocator.exe
+  图标上松开，程序自动解析，窗口会停留显示结果。
+
+方式2（命令行）：
+  打开 CMD / PowerShell，执行：
+    PdmsEquipmentLocator.exe convert <输入TXT> [输出目录] [--equipment 位号]
+  例如：
+    PdmsEquipmentLocator.exe convert "D:\导出\QICHUANG-SITE.txt"
+  （step1 命令仍可用，效果相同）
+
+【调试模式】
+    PdmsEquipmentLocator.exe convert "输入.txt" --equipment V1011A
+  只输出该设备的定位点/BOX/CYLINDER 轮廓/中心/局部轴/名称，
+  并打印设备与每个 Primitive 的 4×4 变换矩阵数值，供核对数学正确性。
+
+【输出】一次运行在 output 文件夹生成：
+  step1_parse_result.json     设备明细（位号/坐标/原始POS/ORI/ZONE/行号/异常）
+  equipment_coordinates.xlsx  设备坐标表 + 解析异常 + 统计（共三个 Sheet）
+  equipment_location.dxf      CAD 定位图，可直接用 AutoCAD 2021+ 打开
+  primitive_report.xlsx       Primitive 统计 / 未支持明细 / ORI 解析异常
+
+【DXF 图层说明】
+  EQUIP_POINT    设备真实定位点（十字，中心严格等于设备 X/Y，绝不移动）
+  EQUIP_MARKER   视觉定位小圆（半径 200mm，仅为定位符号，不代表设备尺寸）
+  EQUIP_TAG      设备位号文字（字高 250mm，简单放在设备点上方，暂不自动避让）
+  EQUIP_OUTLINE  设备真实俯视轮廓（来自 BOX/CYLINDER Primitive 几何数据，
+                 经 3D 变换 → XY 投影 → 凸包，绝不为排版移动真实坐标）
+
+【设备轮廓说明（Phase 2A）】
+  - 轮廓完全来自 PDMS Data Listing 中的真实 Primitive 几何
+    （BOX 按 XLEN/YLEN/ZLEN 八角点；CYLINDER 按 DIAM/HEIG 两端 32 点圆周采样）
+  - 变换链统一为：世界 = 设备变换 × 父级变换 × Primitive 变换 × 局部点
+  - 本阶段支持 BOX / CYLINDER；CONE / DISH / PYRAMID / RTORUS 等
+    尚未支持的类型不会静默忽略，而是逐条列在 primitive_report.xlsx 的
+    "未支持Primitive" Sheet 中（含行号与原始属性数据）
+  - 同层多个 Primitive 不合并（不做 Boolean Union），各画各的轮廓
+
+【坐标规则说明】
+  E=+X  W=-X   N=+Y  S=-Y   U=+Z  D=-Z（单位 mm）
+  小数坐标原样保留，不做任何"合理化"取整。
+  设备块内部子对象（CYLINDER/BOX/NOZZLE 等）的 POS 不会被误认为设备坐标。
+  Excel 中的 X/Y/Z 为真正的数值，与 DXF 十字中心、JSON 完全一致。
+  ZONE 若带 POS 会在"解析异常"中显式记录，绝不静默产生坐标偏移。
+
+【注意事项】
+- 无需安装任何软件（已内置 .NET 运行时）；无需安装 Excel / AutoCAD 即可生成文件。
+- 输入文件请使用 PDMS Data Listing 导出的 TXT（文本格式）。
+- 若文件路径含空格，命令行方式请加英文双引号。
+- 文字自动避让、坐标网格、CONE/DISH/PYRAMID 等更多 Primitive、接地结构
+  将在后续阶段加入。
+
+版本：Phase 2A（2026-08-31）
+════════════════════════════════════════════════════════════
